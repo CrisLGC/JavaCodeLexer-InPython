@@ -27,7 +27,7 @@ def analizar_lexico(codigo):
     patrones = [
         ("Comentario", r"//.*|/\*[\s\S]*?\*/"),  
         ("Cadena", r"\".*?\""),  
-        ("Palabra_clave", r"\b(class|public|private|protected|static|void|int|String|double|float|if|else|while|for|return|new)\b"),
+        ("Palabra_clave", r"\b(import|class|public|private|protected|static|void|int|String|double|float|if|else|while|for|return|new)\b"),
         ("Numero", r"\b\d+(\.\d+)?\b"),
         ("Simbolo", r"[{}();,\[\]]"),
         ("Operador", r"[+\-*/=<>!]"),
