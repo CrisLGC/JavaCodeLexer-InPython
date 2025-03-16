@@ -103,47 +103,54 @@ def analizar_lexico(codigo):
 # Análisis sintáctico (mejorado)
 def analizar_sintactico(codigo):
     errores = []
-    pila_llaves = []
-    pila_parentesis = []
-    lineas = codigo.splitlines()
-    
-    for numero_linea, linea in enumerate(lineas, start=1):
-        # Verificar paréntesis balanceados
-        for i, char in enumerate(linea):
-            if char == '(':
-                pila_parentesis.append((char, numero_linea, i))
-            elif char == ')':
-                if pila_parentesis:
-                    pila_parentesis.pop()
-                else:
-                    errores.append((numero_linea, "Paréntesis de cierre sin apertura", i))
-        
-        # Verificar llaves balanceadas
-        for i, char in enumerate(linea):
-            if char == '{':
-                pila_llaves.append((char, numero_linea, i))
-            elif char == '}':
-                if pila_llaves:
-                    pila_llaves.pop()
-                else:
-                    errores.append((numero_linea, "Llave de cierre sin apertura", i))
+    lineas = codigo.split('\n')  # Dividir el código en líneas
+
+    # Palabras clave que no requieren punto y coma
+    palabras_clave_bloque = {"class", "public", "static", "void", "if", "else", "for", "while", "do", "try", "catch", "finally"}
+
+    # Palabras clave de Java
+    palabras_clave_java = {"abstract", "assert", "boolean", "break", "byte", "case", "catch", "char", "class", "const", "continue", "default", "do", "double", "else", "enum", "extends", "final", "finally", "float", "for", "if", "goto", "implements", "import", "instanceof", "int", "interface", "long", "native", "new", "package", "private", "protected", "public", "return", "short", "static", "strictfp", "super", "switch", "synchronized", "this", "throw", "throws", "transient", "try", "void", "volatile", "while"}
+
+    for i, linea in enumerate(lineas):
+        linea = linea.strip()  # Eliminar espacios en blanco al inicio y final
+
+        # Ignorar líneas vacías, comentarios y bloques de código
+        if not linea or linea.startswith("//") or linea.startswith("/*") or linea.endswith("{"):
+            continue
 
         # Verificar punto y coma al final de las sentencias, ignorando líneas que terminan en comentario
         if re.search(r'\b(int|double|float|String|char|boolean|void)\b', linea) and not re.search(r';\s*(//.*|/\*.*\*/)?$', linea) and not linea.strip().endswith('{') and not linea.strip().endswith('}'):
-            errores.append((numero_linea, "Falta punto y coma al final de la sentencia", len(linea)))
-    
-    # Verificar si hay llaves o paréntesis sin cerrar
-    while pila_parentesis:
-        _, linea, posicion = pila_parentesis.pop()
-        errores.append((linea, "Paréntesis de apertura sin cierre", posicion))
-    
-    while pila_llaves:
-        _, linea, posicion = pila_llaves.pop()
-        errores.append((linea, "Llave de apertura sin cierre", posicion))
-    
+            errores.append((i + 1, "Falta punto y coma al final de la sentencia", len(linea)))
+
+
+        # Verificar uso de palabras clave como identificadores
+        palabras = re.findall(r'\b\w+\b', linea)  # Extraer palabras
+        for palabra in palabras:
+            if palabra in palabras_clave_java and not linea.strip().startswith(palabra):
+                errores.append((f"Línea {i+1}", f"Uso de palabra clave '{palabra}' como identificador", i+1))
+
+        # Verificar caracteres no válidos
+        if "@" in linea:
+            errores.append((f"Línea {i+1}", "Carácter no válido '@'", i+1))
+
+        # Verificar cadenas no cerradas
+        if linea.count('"') % 2 != 0:
+            errores.append((f"Línea {i+1}", "Cadena no cerrada", i+1))
+
     return errores
 
-# Mostrar resultados del análisis léxico
+def mostrar_resultados_sintactico(errores):
+    resultado_area.config(state=tk.NORMAL)
+    resultado_area.delete("1.0", tk.END)
+    
+    resultado_area.insert(tk.END, "Tabla de Errores Sintácticos:\n")
+    resultado_area.insert(tk.END, f"{'Error':<20}{'Descripción':<30}{'Línea':<10}\n")
+    resultado_area.insert(tk.END, "-"*60 + "\n")
+    for error, descripcion, linea in errores:
+        resultado_area.insert(tk.END, f"{error:<20}{descripcion:<30}{linea:<10}\n")
+    
+    resultado_area.config(state=tk.DISABLED)
+
 def mostrar_resultados_lexico(tokens, errores):
     resultado_area.config(state=tk.NORMAL)
     resultado_area.delete("1.0", tk.END)
@@ -162,17 +169,7 @@ def mostrar_resultados_lexico(tokens, errores):
     resultado_area.config(state=tk.DISABLED)
 
 # Mostrar resultados del análisis sintáctico
-def mostrar_resultados_sintactico(errores):
-    resultado_area.config(state=tk.NORMAL)
-    resultado_area.delete("1.0", tk.END)
-    
-    resultado_area.insert(tk.END, "\nTabla de Errores Sintácticos:\n")
-    resultado_area.insert(tk.END, f"{'Línea':<10}{'Descripción':<50}{'Posición':<10}\n")
-    resultado_area.insert(tk.END, "-"*70 + "\n")
-    for linea, descripcion, posicion in errores:
-        resultado_area.insert(tk.END, f"{linea:<10}{descripcion:<50}{posicion:<10}\n")
-    
-    resultado_area.config(state=tk.DISABLED)
+
 
 # Función para limpiar el área de resultados
 def limpiar_salida():
