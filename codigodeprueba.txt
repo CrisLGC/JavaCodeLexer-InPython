@@ -1,0 +1,20 @@
+public class HelloWorld {
+    public static void main(String[] args) {
+        // Imprimir un mensaje en la consola
+        System.out.println("Hello, World!");
+        int numero = 10;
+        double decimal = 3.14;
+        if (numero > 5) {
+            System.out.println("El número es mayor que 5");
+        } else {
+            System.out.println("El número es 5 o menor");
+        }
+        // Comentario de una línea
+        /* Comentario
+           de varias
+           líneas */
+        int class = 20; // Error: uso de palabra clave como identificador
+        @int numeroInvalido = 30; // Error: carácter no válido '@'
+        String cadenaInvalida = "Sin cerrar; // Error: cadena no cerrada
+    }
+}
