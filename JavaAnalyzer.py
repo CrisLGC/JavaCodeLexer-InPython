@@ -3,6 +3,7 @@ import tkinter as tk
 from tkinter import filedialog, scrolledtext
 import re
 from tkinter import Canvas
+import subprocess  # Importar módulo para ejecutar comandos del sistema
 
 def mostrar_menu_principal():
     menu_principal = tk.Tk()
@@ -587,8 +588,11 @@ def crear_interfaz_compilador():
     btn_final = crear_boton(btn_frame, "Generar Código Final", generar_codigo_final_ui)
     btn_final.grid(row=0, column=3, padx=5)
 
+    btn_ejecutar = crear_boton(btn_frame, "Ejecutar Código Java", ejecutar_codigo_java)
+    btn_ejecutar.grid(row=0, column=4, padx=5)
+
     btn_regresar = crear_boton(btn_frame, "Regresar al Menú", lambda: regresar_menu_principal(root))
-    btn_regresar.grid(row=0, column=4, padx=5)
+    btn_regresar.grid(row=0, column=5, padx=5)
 
     global resultado_area
     resultado_area = scrolledtext.ScrolledText(root, width=60, height=10, state=tk.DISABLED, bg='white', fg='black', font=font)
@@ -665,6 +669,67 @@ def mostrar_codigo(codigo, titulo):
     for linea in codigo:
         resultado_area.insert(tk.END, linea + "\n")
     resultado_area.config(state=tk.DISABLED)
+
+def ejecutar_codigo_java():
+    """
+    Compila y ejecuta el código Java ingresado en el área de texto.
+    """
+    # Obtener el código Java del área de texto
+    codigo_java = text_area.get("1.0", tk.END).strip()
+    if not codigo_java:
+        mostrar_codigo(["No hay código Java para ejecutar"], "Advertencia")
+        return
+
+    # Guardar el código en un archivo temporal
+    archivo_java = "TempJavaFile.java"
+    with open(archivo_java, "w") as archivo:
+        archivo.write(codigo_java)
+
+    try:
+        # Compilar el archivo Java
+        resultado_compilacion = subprocess.run(
+            ["javac", archivo_java],
+            capture_output=True,
+            text=True
+        )
+
+        if resultado_compilacion.returncode != 0:
+            # Mostrar errores de compilación
+            mostrar_codigo(
+                ["Errores de compilación:"] + resultado_compilacion.stderr.splitlines(),
+                "Errores de Compilación"
+            )
+            return
+
+        # Ejecutar el archivo compilado
+        resultado_ejecucion = subprocess.run(
+            ["java", archivo_java.replace(".java", "")],
+            capture_output=True,
+            text=True
+        )
+
+        if resultado_ejecucion.returncode == 0:
+            # Mostrar la salida del programa
+            mostrar_codigo(
+                ["Salida del programa:"] + resultado_ejecucion.stdout.splitlines(),
+                "Salida del Programa"
+            )
+        else:
+            # Mostrar errores de ejecución
+            mostrar_codigo(
+                ["Errores de ejecución:"] + resultado_ejecucion.stderr.splitlines(),
+                "Errores de Ejecución"
+            )
+
+    except Exception as e:
+        mostrar_codigo([f"Error al ejecutar el código Java: {str(e)}"], "Error")
+    finally:
+        # Limpiar el archivo temporal
+        import os
+        if os.path.exists(archivo_java):
+            os.remove(archivo_java)
+        if os.path.exists(archivo_java.replace(".java", ".class")):
+            os.remove(archivo_java.replace(".java", ".class"))
 
 # Mostrar el menú principal al iniciar el programa
 mostrar_menu_principal()
